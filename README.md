@@ -23,7 +23,7 @@ This repo is me trying to dive into functional programming and figure out how to
    cd Functional_programming_Project
    ```
 
-3. Run the Python files and cross your fingers. 🤞
+3. Run the files and cross your fingers. 🤞
 
 
 ## Work in Progress 🚧
