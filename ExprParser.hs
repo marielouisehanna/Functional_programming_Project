@@ -1,10 +1,13 @@
+
 module ExprParser (
   Expr(..),
-  expr
+  expr,
+  evaluate
 ) where
 
 import Parsing
 import Token
+import Control.Applicative ( Alternative((<|>)) )
 
 -- Define the expression data type
 data Expr
@@ -12,6 +15,12 @@ data Expr
   | Add Expr Expr -- Addition
   | Mul Expr Expr -- Multiplication
   deriving (Show, Eq)
+
+-- Evaluate an expression
+evaluate :: Expr -> Int
+evaluate (Val n)       = n
+evaluate (Add e1 e2)   = evaluate e1 + evaluate e2
+evaluate (Mul e1 e2)   = evaluate e1 * evaluate e2
 
 -- Parse a value (a natural number)
 value :: Parser Expr

@@ -3,12 +3,17 @@ module Main where
 import ExprParser
 import Parsing
 
--- Entry point
+-- Evaluate an input string and handle errors
+evaluateExpression :: String -> Either String Int
+evaluateExpression input = case runParser expr input of
+    [(result, "")] -> Right (evaluate result)
+    _              -> Left "Invalid input!"
+
+-- Main entry point
 main :: IO ()
 main = do
   putStrLn "Enter an expression:"
   input <- getLine
-  case runParser expr input of
-    [(result, "")] -> print result
-    [(_, rest)]    -> putStrLn $ "Unconsumed input: " ++ rest
-    []             -> putStrLn "Invalid expression!"
+  case evaluateExpression input of
+    Right value -> putStrLn $ "Result: " ++ show value
+    Left err    -> putStrLn err
