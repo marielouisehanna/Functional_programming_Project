@@ -1,0 +1,17 @@
+Scene start {
+  Welcome to the adventure! You are standing in a forest clearing.
+}
+Choice "Go left": left_path
+Choice "Go right": right_path
+
+Scene left_path {
+  You encounter a mysterious stranger.
+}
+Choice "Talk to the stranger": talk
+Choice "Run away": run
+
+Scene right_path {
+  You find a treasure chest.
+}
+Choice "Open the chest": open_chest
+Choice "Ignore it": ignore
