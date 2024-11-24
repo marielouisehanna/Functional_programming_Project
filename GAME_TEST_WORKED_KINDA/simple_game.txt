@@ -1,0 +1,6 @@
+CREATURE Pikachu { HP: 100 ATTACK: Thunderbolt, DAMAGE: 30 }
+CREATURE Charmander { HP: 80 ATTACK: Ember, DAMAGE: 25 }
+CREATURE Bulbasaur { HP: 120 ATTACK: VineWhip, DAMAGE: 20 }
+CREATURE Squirtle { HP: 100 ATTACK: WaterGun, DAMAGE: 30 }
+CREATURE Eevee { HP: 90 ATTACK: QuickAttack, DAMAGE: 20 }
+CREATURE ayle { HP: 11000 ATTACK: Sing, DAMAGE: 150000 }

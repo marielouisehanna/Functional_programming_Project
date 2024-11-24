@@ -1,0 +1,6 @@
+Pikachu,100,Thunderbolt,30
+Charmander,80,Ember,25
+Bulbasaur,120,VineWhip,20
+Squirtle,100,WaterGun,30
+Eevee,90,QuickAttack,20
+ayle,11000,Sing,150000
