@@ -1,0 +1,13 @@
+game "War"
+players 2
+
+card "Ace" value 14
+card "King" value 13
+card "Queen" value 12
+card "Jack" value 11
+card "10" value 10
+card "9" value 9
+
+rule "compare-cards" winner "higher-value"
+
+action "draw" each turn

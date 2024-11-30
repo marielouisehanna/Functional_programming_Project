@@ -1,0 +1,35 @@
+# Compiled Haskell files
+*.hi
+*.o
+*.dyn_hi
+*.dyn_o
+
+# Haskell stack build files
+.stack-work/
+
+# Generated binaries
+CardGameParser
+
+# Cabal build artifacts
+dist/
+dist-newstyle/
+cabal.project.local
+*.prof
+*.eventlog
+
+# Python bytecode files
+__pycache__/
+*.pyc
+*.pyo
+
+# Generated JSON file
+game.json
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Editor/IDE configuration files
+*.swp
+.idea/
+.vscode/
