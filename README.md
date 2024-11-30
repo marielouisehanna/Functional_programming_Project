@@ -1,39 +1,107 @@
 
-# Functional Programming Project 🤓💻
+# Card Game DSL
 
-Welcome to my Functional Programming Project! 🎉  
+This project allows you to define card games using a custom Domain-Specific Language (DSL), parse the DSL into JSON format using Haskell, and execute the game logic in Python.
 
-This repo is me trying to dive into functional programming and figure out how to make my code look fancy and reusable. 
+## Requirements
 
-## What’s in Here? 📦
+### Tools
+- **Haskell**: GHC (Haskell Compiler) and Cabal (Haskell Package Manager)
+- **Python**: Python 3.x (Any modern version)
 
-- Some working examples of functional programming. ✅  
-- A lot of "work in progress" stuff. 🛠️  
-- One or two failed experiments. 💀 
-
-## How to Run This?
-
-1. Clone this thing:
-   ```bash
-   git clone https://github.com/marielouisehanna/Functional_programming_Project
-   ```
-
-2. Get into the folder:
-   ```bash
-   cd Functional_programming_Project
-   ```
-
-3. Run the files and cross your fingers. 🤞
-
-
-## Work in Progress 🚧
-
-Heads up: This is very much a *"learning by doing"* project. \ 🌀 If something doesn’t work, just laugh it off and blame the compiler. 😉
-
-
-
-If you’ve got tips, ideas, or just want to point out my mistakes (kindly, please 🙏), feel free to jump in! Open an issue, send a PR, or just yell into the void.
+### Haskell Libraries
+- `aeson`: For JSON serialization
+- `parsec`: For parsing the DSL
+- `bytestring`: For handling byte strings
 
 ---
 
-Thanks for checking this out! Go on, give functional programming a try. It’s weird, but you’ll love it. Or maybe you won’t. Either way, happy coding! 💻✨
+## Setup Guide
+
+### 1. Install Required Tools
+
+#### Haskell Installation
+1. Install Haskell via [GHCup](https://www.haskell.org/ghcup/).
+2. Verify the installation:
+   ```bash
+   ghc --version
+   cabal --version
+   ```
+
+
+### 2. Install Haskell Libraries
+
+Run the following commands to install the required libraries:
+
+```bash
+cabal install aeson --lib
+cabal install parsec --lib
+cabal install bytestring --lib
+```
+
+To verify the libraries are installed:
+
+```bash
+ghc-pkg list
+```
+
+---
+
+### 3. Set Up the DSL File
+
+Create a file named `game.txt` 
+
+
+### 4. Compile the Haskell Program
+
+Ensure you have two Haskell files:
+1. `CardGameParser.hs`: Contains the parser logic.
+2. `Main.hs`: Contains the entry point to parse the DSL.
+
+Compile the Haskell program:
+
+```bash
+ghc -o CardGameParser -package parsec -package aeson Main.hs CardGameParser.hs
+```
+
+---
+
+### 5. Run the Haskell Program
+
+Run the compiled executable to parse `game.txt` and generate `game.json`:
+
+```bash
+./CardGameParser
+```
+
+After this step, you should see a `game.json` file in the same directory.
+
+---
+
+### 6. Run the Python Program
+
+Run the Python script:
+
+```bash
+python card_game.py
+```
+
+---
+
+
+## Directory Structure
+
+Ensure the following structure for the project:
+
+```
+/CardGameDSL
+   |- Main.hs
+   |- CardGameParser.hs
+   |- game.txt
+   |- card_game.py
+   |- game.json (generated after running the Haskell program)
+```
+
+---
+
+Feel free to reach out if you encounter issues!
