@@ -1,0 +1,31 @@
+setup-{
+
+game "War"
+players 2
+
+set window-size = 600x800
+
+set default-card-size = 40x80
+set default-image-size = 30x20
+
+type card character [health, power]
+type card playing-card [suit, value]
+
+card "King" playing-card {suit = "spades" ; value = 13 ; background = "<path>" ; image = "<path>"} ## or ...playing-card "spades" 13 ?
+card "Archer" character {health = 10 ; power = 15}
+
+define "damage" takes -Int:val -Character:char -> Character{health=(health char)-val ; power =(power char)}
+##		or find some way to write: 	  Character{health=health-val ; power = power}
+define "damage3" takes -Character:char -> damage -3 -char
+define "damage9" = 3*(damage 3)
+
+define "zoom" takes -Card:card -> Card{position = (screen-width/2,screen-height/2) ; size = size*4} ?
+
+trigger (damage3 c) on click c		or	on click c trigger (damage3 c)  
+trigger zoom on hover c  			on hover c trigger zoom c
+
+}-
+
+loop -{
+
+}-
