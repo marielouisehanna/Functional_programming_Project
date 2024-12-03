@@ -1,0 +1,1 @@
+{"cards":[{"color":"red","image":"ace.png","name":"Ace","value":14},{"color":"black","image":null,"name":"King","value":13},{"color":"red","image":null,"name":"Queen","value":12}],"options":[{"name":"language","value":"en"},{"name":"max-rounds","value":"5"}],"rules":[{"action":"draw-again","name":"compare-cards","winner":"higher-value"}]}

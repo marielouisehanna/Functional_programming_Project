@@ -1,0 +1,11 @@
+game "War"
+players 2
+
+card "Ace" value 14 color red image "ace.png"
+card "King" value 13 color black
+card "Queen" value 12 color red
+
+rule "compare-cards" winner "higher-value" action "draw-again"
+
+option "language" "en"
+option "max-rounds" "5"
