@@ -1,77 +1,105 @@
-import json
-import os
 import pygame
+import json
 
-class CardGame:
-    def __init__(self, game_data):
-        self.game_name = game_data['gameName']
-        self.num_players = game_data['numPlayers']
-        self.cards = game_data['cards']
-        self.rules = game_data['rules']
-        self.actions = game_data['actions']
-        self.screen = None
-        self.card_images = {}
-        self.font = None
+# Initialisation de Pygame
+pygame.init()
+screen = pygame.display.set_mode((800, 600))
+pygame.display.set_caption("Card Game")
 
-    def load_card_images(self):
-        """Load card images from the 'cards/' directory."""
-        for card in self.cards:
-            card_name = card['name']
-            image_path = f"cards/{card_name}.png"
-            if os.path.exists(image_path):
-                self.card_images[card_name] = pygame.image.load(image_path)
-            else:
-                print(f"Warning: Image for card '{card_name}' not found.")
+# Chargement des données JSON
+with open("game.json", "r") as f:
+    game_data = json.load(f)
 
-    def setup_pygame(self):
-        """Initialize pygame and set up the display."""
-        pygame.init()
-        self.screen = pygame.display.set_mode((800, 600))
-        pygame.display.set_caption(self.game_name)
-        self.font = pygame.font.Font(None, 36)
+# Extraire les cartes, règles et options
+cards = game_data["cards"]
+rules = game_data["rules"]
+options = game_data["options"]
 
-    def display_text(self, text, position):
-        """Display text on the screen."""
-        text_surface = self.font.render(text, True, (255, 255, 255))
-        self.screen.blit(text_surface, position)
+# Obtenir les options configurées
+language = next((opt["value"] for opt in options if opt["name"] == "language"), "en")
+max_rounds = int(next((opt["value"] for opt in options if opt["name"] == "max-rounds"), 5))
 
-    def display_cards(self):
-        """Display all cards on the screen."""
-        x, y = 50, 100  # Starting position for cards
-        for card in self.cards:
-            card_name = card['name']
-            if card_name in self.card_images:
-                self.screen.blit(self.card_images[card_name], (x, y))
-                self.display_text(card_name, (x + 30, y + 310))  # Display card name below the card
-                x += 220  # Move to the next position
-                if x > 600:  # Wrap to the next row
-                    x = 50
-                    y += 350
+# Traductions
+translations = {
+    "en": {"game": "Game", "rounds": "Rounds", "winner": "Winner"},
+    "fr": {"game": "Jeu", "rounds": "Tours", "winner": "Gagnant"}
+}
+texts = translations.get(language, translations["en"])
 
-    def main_loop(self):
-        """Main game loop."""
-        running = True
-        while running:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
+# Couleurs
+BLACK = (0, 0, 0)
+RED = (255, 0, 0)
+WHITE = (255, 255, 255)
 
-            self.screen.fill((0, 0, 0))  # Clear the screen
-            self.display_text(f"Game: {self.game_name}", (20, 20))
-            self.display_cards()
-            pygame.display.flip()
+# Initialiser les cartes
+card_width = 100
+card_height = 150
+card_spacing = 20
+start_x = (800 - (len(cards) * (card_width + card_spacing))) // 2
+start_y = 200
+card_rects = []
 
-        pygame.quit()
+for i, card in enumerate(cards):
+    x = start_x + i * (card_width + card_spacing)
+    y = start_y
+    card_rects.append(pygame.Rect(x, y, card_width, card_height))
 
-    def start_game(self):
-        """Start the game."""
-        self.setup_pygame()
-        self.load_card_images()
-        self.main_loop()
+# Fonction pour dessiner les cartes
+def draw_cards(selected_card=None):
+    screen.fill(BLACK)
+    font = pygame.font.Font(None, 36)
+    for i, rect in enumerate(card_rects):
+        pygame.draw.rect(screen, RED, rect)
+        text = font.render(cards[i]["name"], True, WHITE)
+        screen.blit(text, (rect.x + 10, rect.y + 60))
+        # Si une carte est sélectionnée, changer sa couleur
+        if selected_card == i:
+            pygame.draw.rect(screen, WHITE, rect, 3)
+    pygame.display.flip()
 
-if __name__ == "__main__":
-    # Load the game data from the generated game.json
-    with open('game.json', 'r') as f:
-        game_data = json.load(f)
-    game = CardGame(game_data)
-    game.start_game()
+# Fonction pour comparer les cartes
+def compare_cards(card1, card2):
+    value1 = card1["value"]
+    value2 = card2["value"]
+    if value1 > value2:
+        return 0  # Le joueur 1 gagne
+    elif value1 < value2:
+        return 1  # Le joueur 2 gagne
+    return -1  # Égalité
+
+# Boucle principale
+running = True
+rounds = 0
+selected_card = None
+while running and rounds < max_rounds:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            pos = pygame.mouse.get_pos()
+            # Vérifiez si une carte a été cliquée
+            for i, rect in enumerate(card_rects):
+                if rect.collidepoint(pos):
+                    selected_card = i
+
+    draw_cards(selected_card)
+
+    # Si une carte est sélectionnée, jouer un tour
+    if selected_card is not None:
+        # Comparer avec une carte aléatoire (par exemple, carte du "joueur 2")
+        import random
+        opponent_card = random.choice(cards)
+        winner = compare_cards(cards[selected_card], opponent_card)
+
+        # Afficher le gagnant
+        font = pygame.font.Font(None, 48)
+        screen.fill(BLACK)
+        text = font.render(f"{texts['winner']}: Player {winner + 1 if winner >= 0 else 'Tie'}", True, WHITE)
+        screen.blit(text, (200, 300))
+        pygame.display.flip()
+
+        pygame.time.wait(2000)  # Attendre avant le prochain tour
+        selected_card = None
+        rounds += 1
+
+pygame.quit()
