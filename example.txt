@@ -1,7 +1,7 @@
 setup-{
 
-game "War"
-players 2
+set game-name "War"
+set players 2
 
 set window-size = 600x800
 
@@ -22,7 +22,7 @@ define "damage9" = 3*(damage 3)
 define "zoom" takes -Card:card -> Card{position = (screen-width/2,screen-height/2) ; size = size*4} ?
 
 trigger (damage3 c) on click c		or	on click c trigger (damage3 c)  
-trigger zoom on hover c  			on hover c trigger zoom c
+trigger zoom c on hover c  			on hover c trigger zoom c
 
 }-
 

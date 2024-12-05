@@ -1,0 +1,33 @@
+program = (setup, loop)
+
+setup = 'setup-{'[line]'}-'
+
+loop = 'loop-{'[line]'}-'
+
+line = setting | type | creation | definition | trigger | tbd...
+
+CHANGED setting = 'set' option '=' value
+setting = 'set' option
+
+CHANGED option = 'game-name' | 'players' | 'window-size' | 'default-card-size' | 'default-image-size'
+
+CHANGED value = String | Int (switch all Ints with Exprs!!) | Int 'x' Int
+
+type = 'type ?card?' String [String]
+
+REMOVED typable = Card | Player (for now ?)
+
+creation = 'card' String Existing-Type '{'json?'}'
+
+REMOVED creatable = Card
+
+definition = 'define' String 'takes' Map?/[String]?/[types] '->' return
+
+return = Existing-Type '{' ??? '}' | Existing-Function [args]
+
+trigger = 'trigger' Existing-Function [args] 'on' action [String?]
+
+action = pre-defined | Existing-Function
+
+pre-defined = 'click' | 'hover' | ?...
+
