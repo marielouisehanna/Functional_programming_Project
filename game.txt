@@ -1,5 +1,6 @@
 game "War"
 players 2
+rounds 6
 
 card "Ace" value 14 color red
 card "King" value 13 color black
@@ -7,7 +8,18 @@ card "Queen" value 12 color red
 card "Jack" value 11 color black
 card "10" value 10 color red
 card "9" value 9 color black
+card "8" value 8 color red
+card "7" value 7 color black
+card "6" value 6 color red
+card "5" value 5 color black
+card "4" value 4 color red
+card "3" value 3 color black
+card "2" value 2 color red
 
 rule "compare-cards" winner "higher-value"
+
+option "language" "en"
+option "animation" "true"
+option "cards-per-player" "3"
 
 action "draw" each turn
