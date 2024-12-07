@@ -2,6 +2,26 @@ import pygame
 import json
 import random
 
+
+def min_indexes(cards):
+    values = [card["value"] for card in cards]
+    min_val = min(values)
+    min_ind = []
+    for i in range(len(values)):
+        if values[i] == min_val:
+            min_ind.append(i)
+    return min_ind
+
+def max_indexes(cards):
+    values = [card["value"] for card in cards]
+    max_val = max(values)
+    max_ind = []
+    for i in range(len(values)):
+        if values[i] == max_val:
+            max_ind.append(i)
+    return max_ind
+
+
 # Initialize Pygame
 pygame.init()
 screen = pygame.display.set_mode((1200, 800))
@@ -14,6 +34,7 @@ with open("game.json", "r") as f:
 # Extract game data
 game_name = game_data["gameName"]
 player_count = game_data["players"]
+player_count+=1
 rounds = game_data["rounds"]
 cards = game_data["cards"]
 rules = game_data["rules"]
@@ -26,12 +47,18 @@ cards_per_player = next(
     default_cards_per_player
 )
 
+empty_selection = []
+for i in range(player_count):
+    empty_selection.append(None)
+
 # Game state
 deck = cards[:]
 random.shuffle(deck)
 players = [{"name": f"Player {i + 1}", "cards": [], "points": 0} for i in range(player_count)]
 current_round = 1
-selected_cards = [None, None]  # Tracks card selections for both players
+selected_cards = []  # Tracks card selections for both players
+for i in range(player_count):
+    selected_cards.append(None)
 game_over = False
 round_results = []
 
@@ -70,16 +97,18 @@ def draw_background():
     screen.blit(round_info, (900, 20))
 
 def draw_players():
+    x_offset = 50
     y_offset = 120
     for i, player in enumerate(players):
         color = BLACK if selected_cards[i] is None else GOLD
         player_text = player_font.render(f"{player['name']} ({player['points']} {texts['points']})", True, color)
-        screen.blit(player_text, (50, y_offset))
-        y_offset += 80
+        screen.blit(player_text, (x_offset, y_offset))
+        x_offset += 0 if i % 2 == 0 else 600
+        y_offset += 80 if i % 2 == 0 else -80
 
 def draw_cards(player_index):
-    x_start = 100
-    y_start = 300 if player_index == 0 else 500
+    x_start = 100 + (500*(player_index//2))
+    y_start = 300 if player_index % 2 == 0 else 500
     player = players[player_index]
     for i, card in enumerate(player["cards"]):  # Display all cards for the player
         rect = pygame.Rect(x_start + i * 110, y_start, 100, 150)
@@ -103,27 +132,43 @@ def compare_cards(card1, card2):
         return card1["value"] < card2["value"]
     return False
 
+def compare_cards2(cards):
+    rule = rules[0]  # Apply the first rule
+    if rule["winner"] == "higher-value":
+        return max_indexes(cards)
+    elif rule["winner"] == "lower-value":
+        return min_indexes(cards)
+    return []
+
 def handle_round():
     global current_round, selected_cards, game_over
 
     if None not in selected_cards:  # Both players have selected their cards
-        card1 = players[0]["cards"].pop(selected_cards[0])
-        card2 = players[1]["cards"].pop(selected_cards[1])
+        cards = [players[i]["cards"].pop(selected_cards[i]) for i in range(player_count)]
 
-        if compare_cards(card1, card2):
-            players[0]["points"] += 1
-            round_results.append(f"{players[0]['name']} wins with {card1['name']}!")
-        elif compare_cards(card2, card1):
-            players[1]["points"] += 1
-            round_results.append(f"{players[1]['name']} wins with {card2['name']}!")
-        else:
-            round_results.append("It's a tie!")
+        winners = compare_cards2(cards)
+        for w in winners:
+            players[w]["points"] += 1
+        
+        # if compare_cards(cards):
+        #     players[0]["points"] += 1
+        #     round_results.append(f"{players[0]['name']} wins with {card1['name']}!")
+        # elif compare_cards():
+        #     players[1]["points"] += 1
+        #     round_results.append(f"{players[1]['name']} wins with {card2['name']}!")
+        # else:
+        #     round_results.append("It's a tie!")
 
-        selected_cards = [None, None]  # Reset selections
+        # selected_cards = [None, None]  # Reset selections
+        for i in range(len(selected_cards)):
+            selected_cards[i] = None
         current_round += 1
 
-        if current_round > rounds or not players[0]["cards"] or not players[1]["cards"]:
+        if current_round >= rounds or not players[0]["cards"] or not players[1]["cards"]:
             game_over = True
+
+        for i in range(player_count):
+            players[i]["cards"].append(deck.pop())
 
 # Main Game Loop
 running = True
