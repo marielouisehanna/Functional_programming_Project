@@ -4,10 +4,14 @@ module CardGameParser where
 
 import Text.Parsec
 import Text.Parsec.String (Parser)
-import Data.Aeson (ToJSON, encode)
+import Data.Aeson
 import qualified Data.ByteString.Lazy as B
 import GHC.Generics (Generic)
 import Data.List.Split
+import Data.Char(isSpace)
+
+cutWhitespace :: [String] -> [String]
+cutWhitespace = map (dropWhile isSpace)
 
 -- Data types for the game
 --data Card = Card { name :: String, stats :: [String] } deriving (Show, Generic)
@@ -46,15 +50,28 @@ data Trigger = Trigger { name :: Definition, args :: [String], action :: Action,
 data Action = DefinedAction PreDefined | FunctionAction Definition deriving (Show, Generic)
 data PreDefined = Click | Hover deriving (Show, Generic)
 
--- still have to define parsers
 
 instance ToJSON Program
-instance ToJSON CodeLine
-instance ToJSON Setting
-instance ToJSON Option
-instance ToJSON Size
-instance ToJSON Type
-instance ToJSON Creation
+instance ToJSON CodeLine where
+  toJSON (SettingLine setting) = object ["lineType" .= String "setting", "data" .= toJSON setting]
+  toJSON (TypeLine cardType) = object ["lineType" .= String "type", "data" .= toJSON cardType]
+  toJSON (CreationLine creation) = object ["lineType" .= String "creation", "data" .= toJSON creation]
+  toJSON (DefinitionLine definition) = object ["lineType" .= String "definition", "data" .= toJSON definition]
+  toJSON (TriggerLine trigger) = object ["lineType" .= String "trigger", "data" .= toJSON trigger]
+instance ToJSON Setting where
+  toJSON (Setting option) = object ["setting" .= toJSON option]
+instance ToJSON Option where
+  toJSON (GameName title) = object ["option" .= String "gameName", "title" .= title]
+  toJSON (Players number) = object ["option" .= String "playerCount", "number" .= number]
+  toJSON (WindowSize size) = object ["option" .= String "windowSize", "size" .= toJSON size]
+  toJSON (CardSize size) = object ["option" .= String "cardSize", "size" .= toJSON size]
+  toJSON (ImageSize size) = object ["option" .= String "imageSize", "size" .= toJSON size]
+instance ToJSON Size where
+  toJSON (Size {width=w, height=h}) = object ["width" .= w, "height" .= h]
+instance ToJSON Type where
+  toJSON (Type {typeName=name, attributes=att}) = object ["typeName" .= name, "attributes" .= att]
+instance ToJSON Creation where
+  toJSON (Creation {cardName=name, typed=typ, values=vals}) = object ["cardName" .=name, "type" .= typ, "values" .= vals]
 instance ToJSON Definition
 instance ToJSON Return
 instance ToJSON Trigger
@@ -117,7 +134,7 @@ listParser = do
   char '[' >> spaces
   list <- manyTill anyChar (char ']')
   spaces
-  return $ splitOn "," list
+  return $ cutWhitespace $ splitOn "," list
 
 
 typeParser :: Parser Type
