@@ -2,6 +2,7 @@ game "War"
 players 2
 rounds 6
 
+card "Ace" value 14 bg "red.png"
 card "Ace" value 14 color red
 card "King" value 13 color black
 card "Queen" value 12 color red

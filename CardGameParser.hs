@@ -4,17 +4,33 @@ module CardGameParser
     ( parseGameFile ) -- Exported function for Main.hs
     where
 
-import Data.Aeson (Value, object, (.=), encode)
+import Data.Aeson (Value(String), object, (.=), encode)
 import qualified Data.ByteString.Lazy as B
 import Text.Parsec
 import Text.Parsec.String (Parser)
 import Control.Monad (void)
 
 -- Data Types
-data Card = Card { name :: String, value :: Int, color :: String } deriving Show
+data Card = Card { name :: String, value :: Int, bg :: Background } deriving Show
 data Rule = Rule { ruleName :: String, winner :: String } deriving Show
 data Option = Option { optName :: String, optValue :: String } deriving Show
 data Action = Action { actionName :: String, trigger :: String } deriving Show
+data Background = Image String | Color String deriving Show
+
+
+-- Background Parser
+bgParser :: Parser Background
+bgParser = do
+    string "color"
+    spaces
+    color <- many1 letter
+    return $ Color color
+    <|> do
+    string "bg"
+    spaces
+    img <- quotedString
+    return $ Image img
+
 
 -- Card Parser
 cardParser :: Parser Card
@@ -26,10 +42,11 @@ cardParser = do
     void $ string "value "
     cardValue <- read <$> many1 digit
     spaces
-    void $ string "color "
-    cardColor <- many1 letter
+    -- void $ string "color "
+    -- cardBG <- many1 letter
+    cardBG <- bgParser
     spaces
-    return $ Card cardName cardValue cardColor
+    return $ Card cardName cardValue cardBG
 
 -- Rule Parser
 ruleParser :: Parser Rule
@@ -108,8 +125,12 @@ generateJSON gName pCount rCount cards rules options actions = do
             ]
     B.writeFile "game.json" (encode json)
 
+bgToJSON :: Background -> Value
+bgToJSON (Color c) = object ["type" .= String "color","color" .= c]
+bgToJSON (Image p) = object ["type" .= String "image","path" .= p]
+
 cardToJSON :: Card -> Value
-cardToJSON (Card n v c) = object ["name" .= n, "value" .= v, "color" .= c]
+cardToJSON (Card n v bg) = object ["name" .= n, "value" .= v, "bg" .= bgToJSON bg]
 
 ruleToJSON :: Rule -> Value
 ruleToJSON (Rule n w) = object ["name" .= n, "winner" .= w]
