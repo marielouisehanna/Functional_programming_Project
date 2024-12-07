@@ -40,7 +40,7 @@ for i in range(cards_per_player * player_count):
     players[i % player_count]["cards"].append(deck.pop())
 
 # Language option
-language = next((opt["value"]) for opt in options if opt["name"] == "language", "en")
+language = next((opt["value"] for opt in options if opt["name"] == "language"), "en")
 
 # Language translations
 translations = {
