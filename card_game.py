@@ -107,16 +107,29 @@ def draw_players():
         y_offset += 80 if i % 2 == 0 else -80
 
 def draw_cards(player_index):
-    x_start = 100 + (500*(player_index//2))
+    x_start = 100 + (500 * (player_index // 2))
     y_start = 300 if player_index % 2 == 0 else 500
     player = players[player_index]
+    
     for i, card in enumerate(player["cards"]):  # Display all cards for the player
         rect = pygame.Rect(x_start + i * 110, y_start, 100, 150)
+        
+        # Convert the card's color from text to an RGB tuple
+        card_color = {
+            "red": (255, 0, 0),
+            "black": (0, 0, 0),
+            "blue": (0, 0, 255),
+            "green": (0, 255, 0),
+            "yellow": (255, 255, 0)
+        }.get(card["color"], CARD_COLOR)  # Default to CARD_COLOR if not specified
+        
         pygame.draw.rect(screen, GOLD if selected_cards[player_index] == i else CARD_BORDER_COLOR, rect, 5)
-        pygame.draw.rect(screen, CARD_COLOR, rect.inflate(-10, -10), border_radius=15)  # Rounded card
-        card_text = font.render(card["name"], True, BLACK)
+        pygame.draw.rect(screen, card_color, rect.inflate(-10, -10), border_radius=15)  # Use card color here
+        
+        card_text = font.render(card["name"], True, WHITE if card["color"] in ["black", "blue"] else BLACK)
         screen.blit(card_text, (x_start + i * 110 + 10, y_start + 60))
         card["rect"] = rect  # Store rect for click detection
+
 
 def draw_round_results():
     if round_results:
