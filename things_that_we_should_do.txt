@@ -8,3 +8,12 @@
 
 
 4 --> Center the picture!!!!!!!!!!
+
+
+5 -->     "rules": {
+        "winCondition": "First to 21 points",
+        "turnOrder": "Clockwise"
+    },
+    "players": ["Bob", "Alice"]
+}
+fina nzid hek chi deja la nsamme el players de 2 more detialed rules
