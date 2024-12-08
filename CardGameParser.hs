@@ -1,110 +1,70 @@
-{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module CardGameParser (
-    GameData(..),
-    parseGameFile,
-    writeGameDataToJson
-) where
+module CardGameParser where
 
-import Data.Aeson (ToJSON, encode)
-import GHC.Generics (Generic)
 import Text.Parsec
 import Text.Parsec.String (Parser)
+import Data.Aeson (encode, ToJSON, toJSON, object, (.=))
 import qualified Data.ByteString.Lazy as B
+import Data.Maybe (fromMaybe)
 
--- Data Types
-data Game = Game {
-    gameName :: String
-} deriving (Show, Generic)
-instance ToJSON Game
+data Card = Card { name :: String, value :: Int, bg :: Maybe String, image :: String } deriving Show
+data Rule = Rule String String deriving Show
+data Game = Game String [String] [Card] [Rule] deriving Show
 
-data Player = Player {
-    playerName     :: String,
-    playerStrategy :: String
-} deriving (Show, Generic)
-instance ToJSON Player
+instance ToJSON Card where
+    toJSON (Card name value bg image) = 
+        object ["name" .= name, "value" .= value, "bg" .= bg, "image" .= image]
 
-data Card = Card {
-    cardName  :: String,
-    cardValue :: Int,
-    cardImage :: Maybe String
-} deriving (Show, Generic)
-instance ToJSON Card
+instance ToJSON Rule where
+    toJSON (Rule key value) = object [key .= value]
 
-data Rule = Rule {
-    ruleName   :: String,
-    ruleDetail :: String
-} deriving (Show, Generic)
-instance ToJSON Rule
+instance ToJSON Game where
+    toJSON (Game name players cards rules) =
+        object ["name" .= name, "players" .= players, "cards" .= cards, "rules" .= rules]
 
-data GameData = GameData {
-    game       :: Maybe Game,
-    players    :: [Player],
-    rounds     :: Maybe Int,
-    cards      :: [Card],
-    rules      :: [Rule]
-} deriving (Show, Generic)
-instance ToJSON GameData
-
--- Parsers
-parseGame :: Parser Game
-parseGame = do
-    string "game"
-    spaces
-    name <- between (char '"') (char '"') (many (noneOf "\""))
-    return $ Game name
-
-parseRounds :: Parser Int
-parseRounds = do
-    string "rounds"
-    spaces
-    read <$> many1 digit
-
-parsePlayer :: Parser Player
-parsePlayer = do
-    string "player"
-    spaces
-    name <- between (char '"') (char '"') (many (noneOf "\""))
-    spaces
-    string "strategy"
-    spaces
-    strategy <- between (char '"') (char '"') (many (noneOf "\""))
-    return $ Player name strategy
-
-parseCard :: Parser Card
-parseCard = do
+-- Parser for cards
+cardParser :: Parser Card
+cardParser = do
     string "card"
     spaces
-    name <- between (char '"') (char '"') (many (noneOf "\""))
+    cardName <- between (char '"') (char '"') (many1 (noneOf "\""))
     spaces
     string "value"
     spaces
     value <- read <$> many1 digit
-    image <- optionMaybe (try $ spaces >> string "image" >> spaces >> between (char '"') (char '"') (many (noneOf "\"")))
-    return $ Card name value image
+    bg <- optionMaybe $ try (spaces *> string "bg" *> spaces *> between (char '"') (char '"') (many1 (noneOf "\"")))
+    img <- optionMaybe $ try (spaces *> string "image" *> spaces *> between (char '"') (char '"') (many1 (noneOf "\"")))
+    return $ Card cardName value bg (fromMaybe "default.png" img)
 
-parseRule :: Parser Rule
-parseRule = do
+-- Parser for rules
+ruleParser :: Parser Rule
+ruleParser = do
     string "rule"
     spaces
-    name <- between (char '"') (char '"') (many (noneOf "\""))
+    key <- between (char '"') (char '"') (many1 (noneOf "\""))
     spaces
-    detail <- manyTill anyChar (try (newline >> return '\n') <|> (eof >> return '\n'))
-    return $ Rule name (unwords $ words detail)
+    value <- between (char '"') (char '"') (many1 (noneOf "\""))
+    return (Rule key value)
 
--- Combine parsers
-parseGameFile :: Parser GameData
-parseGameFile = do
-    g <- optionMaybe parseGame
-    r <- optionMaybe parseRounds
-    cs <- many (try parseCard)
-    ps <- many (try parsePlayer)
-    rs <- many (try parseRule)
-    return $ GameData g ps r cs rs
+-- Full parser
+gameParser :: Parser Game
+gameParser = do
+    string "game"
+    spaces
+    gameName <- between (char '"') (char '"') (many1 (noneOf "\""))
+    spaces
+    string "players"
+    spaces
+    players <- many1 (between (char '"') (char '"') (many1 (noneOf "\"")) <* spaces)
+    cards <- many1 (try (spaces *> cardParser))
+    rules <- many1 (try (spaces *> ruleParser))
+    return $ Game gameName players cards rules
 
--- Write GameData to JSON
-writeGameDataToJson :: GameData -> FilePath -> IO ()
-writeGameDataToJson gameData filePath = do
-    let jsonData = encode gameData
-    B.writeFile filePath jsonData
+-- Main function
+main :: IO ()
+main = do
+    input <- readFile "game.txt"
+    case parse gameParser "" input of
+        Left err -> print err
+        Right game -> B.writeFile "game.json" (encode game)
