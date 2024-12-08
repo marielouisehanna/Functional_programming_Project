@@ -1,13 +1,19 @@
 game "War"
+players 2
 rounds 6
 
-card "Ace" value 14 image "ace.png"
-card "King" value 13
-card "Queen" value 12 image "queen.png"
+card "Ace" value 14 bg "red.png" image "ace.png"
+card "King" value 13 bg "black.png" image "king.png"
+card "Queen" value 12 bg "red.png"
+card "Jack" value 11 bg "black.png" image "jack.png"
 
-player "Bob" strategy "aggressive"
-player "Alice" strategy "defensive"
+rule "winCondition" "First to 21 points"
+rule "turnOrder" "Clockwise"
+rule "playerRule" "Player 1 starts first"
+rule "playerRule" "Player 2 gets 2 extra cards"
 
-rule "compare-cards" winner "higher-value"
-rule "points-for-card" card "Ace" points 5
-rule "specific-round-win" rounds 6
+option "language" "en"
+option "animation" "true"
+option "cards-per-player" 3
+
+action "draw" each turn
