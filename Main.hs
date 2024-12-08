@@ -13,4 +13,5 @@ main = do
             case parse parseGameFile inputFile content of
                 Left err -> putStrLn $ "Error parsing game file: " ++ show err
                 Right gameData -> writeGameDataToJson gameData outputFile
+
         _ -> putStrLn "Usage: CardGameParser <input file> <output file>"
