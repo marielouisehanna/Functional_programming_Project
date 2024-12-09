@@ -1,70 +1,166 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module CardGameParser where
+module CardGameParser
+    ( parseGameFile ) -- Exported function for Main.hs
+    where
 
+import Data.Aeson (Value(String), object, (.=), encode)
+import qualified Data.ByteString.Lazy as B
 import Text.Parsec
 import Text.Parsec.String (Parser)
-import Data.Aeson (encode, ToJSON, toJSON, object, (.=))
-import qualified Data.ByteString.Lazy as B
-import Data.Maybe (fromMaybe)
+import Control.Monad (void)
 
-data Card = Card { name :: String, value :: Int, bg :: Maybe String, image :: String } deriving Show
-data Rule = Rule String String deriving Show
-data Game = Game String [String] [Card] [Rule] deriving Show
+-- Data Types
+data Card = Card { name :: String, value :: Int, bg :: Background } deriving Show
+data Rule = Rule { ruleName :: String, winner :: String } deriving Show
+data Option = Option { optName :: String, optValue :: String } deriving Show
+data Action = Action { actionName :: String, trigger :: String } deriving Show
+data Background = Image String | Color String deriving Show
 
-instance ToJSON Card where
-    toJSON (Card name value bg image) = 
-        object ["name" .= name, "value" .= value, "bg" .= bg, "image" .= image]
 
-instance ToJSON Rule where
-    toJSON (Rule key value) = object [key .= value]
+-- Background Parser
+bgParser :: Parser Background
+bgParser = do
+    string "color"
+    spaces
+    color <- many1 letter
+    return $ Color color
+    <|> do
+    string "bg"
+    spaces
+    img <- quotedString
+    return $ Image img
 
-instance ToJSON Game where
-    toJSON (Game name players cards rules) =
-        object ["name" .= name, "players" .= players, "cards" .= cards, "rules" .= rules]
 
--- Parser for cards
+-- Card Parser
 cardParser :: Parser Card
 cardParser = do
-    string "card"
     spaces
-    cardName <- between (char '"') (char '"') (many1 (noneOf "\""))
+    void $ string "card "
+    cardName <- quotedString
     spaces
-    string "value"
+    void $ string "value "
+    cardValue <- read <$> many1 digit
     spaces
-    value <- read <$> many1 digit
-    bg <- optionMaybe $ try (spaces *> string "bg" *> spaces *> between (char '"') (char '"') (many1 (noneOf "\"")))
-    img <- optionMaybe $ try (spaces *> string "image" *> spaces *> between (char '"') (char '"') (many1 (noneOf "\"")))
-    return $ Card cardName value bg (fromMaybe "default.png" img)
+    -- void $ string "color "
+    -- cardBG <- many1 letter
+    cardBG <- bgParser
+    spaces
+    return $ Card cardName cardValue cardBG
 
--- Parser for rules
+-- Rule Parser
 ruleParser :: Parser Rule
 ruleParser = do
-    string "rule"
     spaces
-    key <- between (char '"') (char '"') (many1 (noneOf "\""))
+    void $ string "rule "
+    rName <- quotedString
     spaces
-    value <- between (char '"') (char '"') (many1 (noneOf "\""))
-    return (Rule key value)
+    void $ string "winner "
+    winnerName <- quotedString
+    spaces
+    return $ Rule rName winnerName
 
--- Full parser
-gameParser :: Parser Game
+-- Option Parser
+optionParser :: Parser Option
+optionParser = do
+    spaces
+    void $ string "option "
+    optName <- quotedString
+    spaces
+    optValue <- quotedString
+    spaces
+    return $ Option optName optValue
+
+-- Action Parser
+actionParser :: Parser Action
+actionParser = do
+    spaces
+    void $ string "action "
+    actionName <- quotedString
+    spaces
+    void $ string "each turn"
+    spaces
+    return $ Action actionName "each turn"
+
+-- Metadata Parser
+metadataParser :: Parser (String, Int, Int)
+metadataParser = do
+    spaces
+    void $ string "game "
+    gName <- quotedString
+    spaces
+    void $ string "players "
+    pCount <- read <$> many1 digit
+    spaces
+    void $ string "rounds "
+    rCount <- read <$> many1 digit
+    spaces
+    return (gName, pCount, rCount)
+
+-- Quoted String Parser
+quotedString :: Parser String
+quotedString = char '"' >> manyTill anyChar (char '"')
+
+-- Main Game Parser
+gameParser :: Parser (String, Int, Int, [Card], [Rule], [Option], [Action])
 gameParser = do
-    string "game"
-    spaces
-    gameName <- between (char '"') (char '"') (many1 (noneOf "\""))
-    spaces
-    string "players"
-    spaces
-    players <- many1 (between (char '"') (char '"') (many1 (noneOf "\"")) <* spaces)
-    cards <- many1 (try (spaces *> cardParser))
-    rules <- many1 (try (spaces *> ruleParser))
-    return $ Game gameName players cards rules
+    (gName, pCount, rCount) <- metadataParser
+    cards <- many (cardParser <* spaces)
+    rules <- many (ruleParser <* spaces)
+    options <- many (optionParser <* spaces)
+    actions <- many (actionParser <* spaces)
+    return (gName, pCount, rCount, cards, rules, options, actions)
 
--- Main function
-main :: IO ()
-main = do
-    input <- readFile "game.txt"
+-- Convert Parsed Data to JSON
+generateJSON :: String -> Int -> Int -> [Card] -> [Rule] -> [Option] -> [Action] -> IO ()
+generateJSON gName pCount rCount cards rules options actions = do
+    let json = object
+            [ "gameName" .= gName
+            , "players" .= pCount
+            , "rounds" .= rCount
+            , "cards" .= map cardToJSON cards
+            , "rules" .= map ruleToJSON rules
+            , "options" .= map optionToJSON options
+            , "actions" .= map actionToJSON actions
+            ]
+    B.writeFile "game.json" (encode json)
+
+bgToJSON :: Background -> Value
+bgToJSON (Color c) = object ["type" .= String "color","color" .= c]
+bgToJSON (Image p) = object ["type" .= String "image","path" .= p]
+
+cardToJSON :: Card -> Value
+cardToJSON (Card n v bg) = object ["name" .= n, "value" .= v, "bg" .= bgToJSON bg]
+
+ruleToJSON :: Rule -> Value
+ruleToJSON (Rule n w) = object ["name" .= n, "winner" .= w]
+
+optionToJSON :: Option -> Value
+optionToJSON (Option n v) = object ["name" .= n, "value" .= v]
+
+actionToJSON :: Action -> Value
+actionToJSON (Action n t) = object ["name" .= n, "trigger" .= t]
+
+-- Parse Game File with Error Handling
+parseGameFile :: FilePath -> IO ()
+parseGameFile filePath = do
+    input <- readFile filePath
     case parse gameParser "" input of
-        Left err -> print err
-        Right game -> B.writeFile "game.json" (encode game)
+        Left err -> do
+            putStrLn "Error while parsing the file:"
+            print err
+        Right (gName, pCount, rCount, cards, rules, options, actions) -> do
+            putStrLn "Parsing completed successfully."
+            putStrLn $ "Game Name: " ++ gName
+            putStrLn $ "Players: " ++ show pCount
+            putStrLn $ "Rounds: " ++ show rCount
+            putStrLn "Cards:"
+            mapM_ print cards
+            putStrLn "Rules:"
+            mapM_ print rules
+            putStrLn "Options:"
+            mapM_ print options
+            putStrLn "Actions:"
+            mapM_ print actions
+            generateJSON gName pCount rCount cards rules options actions
+            putStrLn "Game configuration saved to game.json"
