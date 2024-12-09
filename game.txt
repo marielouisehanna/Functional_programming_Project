@@ -2,18 +2,40 @@ game "War"
 players 2
 rounds 6
 
-card "Ace" value 14 bg "red.png" image "ace.png"
-card "King" value 13 bg "black.png" image "king.png"
-card "Queen" value 12 bg "red.png"
-card "Jack" value 11 bg "black.png" image "jack.png"
+card "Ace" value 14 bg "red.png"
+card "Ace" value 14 color red
+card "King" value 13 color black
+card "Queen" value 12 color red
+card "Jack" value 11 color black
+card "10" value 10 color red
+card "9" value 9 color black
+card "8" value 8 color red
+card "7" value 7 color black
+card "6" value 6 color red
+card "5" value 5 color black
+card "4" value 4 color red
+card "3" value 3 color black
+card "2" value 2 color red
 
-rule "winCondition" "First to 21 points"
-rule "turnOrder" "Clockwise"
-rule "playerRule" "Player 1 starts first"
-rule "playerRule" "Player 2 gets 2 extra cards"
+card "7b" value 7 color black
+card "6b" value 6 color red
+card "5b" value 5 color black
+card "4b" value 4 color red
+card "3b" value 3 color black
+card "2b" value 2 color red
+
+card "Aceb" value 14 color red
+card "Kingb" value 13 color black
+card "Queenb" value 12 color red
+card "Jackb" value 11 color black
+card "10b" value 10 color red
+card "9b" value 9 color black
+card "8b" value 8 color red
+
+rule "compare-cards" winner "higher-value"
 
 option "language" "en"
 option "animation" "true"
-option "cards-per-player" 3
+option "cards-per-player" "3"
 
 action "draw" each turn
